@@ -1,4 +1,4 @@
 output "example_output" {
-  description = "Example output of the module"
-  value       = module.terraform_module_template
+  description = "List of Budgets"
+  value       = module.aws_budgets
 }
