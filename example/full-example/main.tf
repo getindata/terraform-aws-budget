@@ -1,5 +1,5 @@
 module "aws_budgets" {
-  source  = "../../"
+  source  = "github.com/getindata/terraform-aws-budget"
   context = module.this.context
 
   budgets = {
