@@ -1,18 +1,11 @@
-# Terraform Module Template
+# Terraform AWS Budget
 
-
-> **Warning**:
-> This is a template document. Remember to **remove** all text in _italics_ and **update** Module name, Repo name and links/badges to the acual name of your GitHub repository/module!!!
-
-<!--- Pick Cloud provider Badge -->
-<!---![Azure](https://img.shields.io/badge/azure-%230072C6.svg?style=for-the-badge&logo=microsoftazure&logoColor=white) -->
-<!---![Google Cloud](https://img.shields.io/badge/GoogleCloud-%234285F4.svg?style=for-the-badge&logo=google-cloud&logoColor=white) -->
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![Terraform](https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white)
 
 <!--- Replace repository name -->
-![License](https://badgen.net/github/license/getindata/terraform-module-template/)
-![Release](https://badgen.net/github/release/getindata/terraform-module-template/)
+![License](https://badgen.net/github/license/getindata/terraform-aws-budget/)
+![Release](https://badgen.net/github/release/getindata/terraform-aws-budget/)
 
 <p align="center">
   <img height="150" src="https://getindata.com/img/logo.svg">
@@ -21,30 +14,197 @@
 
 ---
 
-_Brief Description of MODULE:_
+This terraform module creates and manages multiple AWS budgets for single AWS Account.
 
-* _What it does_
-* _What techonlogies it uses_
+It makes use of submodules, placed in `./modules` directory, to create the resources.
 
 ## USAGE
 
-_Example usage of the module - terraform code snippet_
-
 ```terraform
+module "aws_budgets" {
+  source  = "github.com/getindata/terraform-aws-budget"
+  context = module.this.context
+
+  budgets = {
+    default = {
+      limit_amount = 100
+    }
+  }
+
+  default_notifications = {
+    default-actual-100 = {
+      comparison_operator : "GREATER_THAN"
+      threshold : 100
+      threshold_type : "PERCENTAGE"
+      notification_type : "ACTUAL"
+      subscriber_email_addresses : []
+    }
+  }
+
+  default_email_addresses = ["aws@example.com"]
 ```
 
 ## NOTES
 
-_Additional information that should be made public, for ex. how to solve known issues, additional descriptions/suggestions_
+This module uses a specific `budgets` object for configurations - below paragraph describes it in detail:
+
+```terraform
+    ```
+    {
+      BUDGET-NAME = {
+        # Optional
+        budget_type # - Whether this budget tracks monetary cost or usage. Availiable options: 'COST', 'USAGE', 'SAVINGS_PLANS_UTILIZATION', 'RI_UTILIZATION'."
+        time_period_start # - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: 2017-01-01_12:00
+        time_period_end # - The end of the time period covered by the budget. There are no restrictions on the end date. Format: 2017-01-01_12:00
+        name # - Budget name (if omitted, map key, BUDGET-NAME will be used)
+        time_unit # -The length of time until a budget resets the actual and forecasted spend. Valid values: MONTHLY, QUARTERLY, ANNUALLY, and DAILY
+        cost filters # - A list of CostFilter name/values pair to apply to budget
+        [
+          {
+            name  string # - A list of CostFilter name/values pair to apply to budget
+            value = list(string) # - Refer to AWS CostFilter documentation for further detail.
+          }
+        ]
+        notifications # - A map of objects containing Budget Notifications 
+        {
+          NOTIFICATION-NAME = {
+            comparison_operator # - Comparison operator to use to evaluate the condition. Can be LESS_THAN, EQUAL_TO or GREATER_THAN.
+            threshold # - Threshold when the notification should be sent.
+            threshold_type # - What kind of threshold is defined. Can be PERCENTAGE OR ABSOLUTE_VALUE.
+            notification_type # - What kind of budget value to notify on. Can be ACTUAL or FORECASTED.
+            subscriber_email_addresses # - E-Mail addresses to notify.
+          },
+        }
+        extra_notifications # - A map of objects containing Additional Budget Notifications (will be combined with var.default_notifications)
+        {
+          ADDITIONAL-NOTIFICATION-NAME = {
+            comparison_operator # - Comparison operator to use to evaluate the condition. Can be LESS_THAN, EQUAL_TO or GREATER_THAN.
+            threshold # - Threshold when the notification should be sent.
+            threshold_type # - What kind of threshold is defined. Can be PERCENTAGE OR ABSOLUTE_VALUE.
+            notification_type # - What kind of budget value to notify on. Can be ACTUAL or FORECASTED.
+            subscriber_email_addresses # - E-Mail addresses to notify.
+          },
+        }
+        cost_types # - A map containing CostTypes The types of cost included in a budget, such as tax and subscriptions.
+        {
+          include_credit # - A boolean value whether to include credits in the cost budget. Defaults to true
+          include_discount # - Specifies whether a budget includes discounts. Defaults to true
+          include_other_subscription # - A boolean value whether to include other subscription costs in the cost budget. Defaults to true
+          include_recurring # - A boolean value whether to include recurring costs in the cost budget. Defaults to true
+          include_refund # - A boolean value whether to include refunds in the cost budget. Defaults to true
+          include_subscription # - A boolean value whether to include subscriptions in the cost budget. Defaults to true
+          include_support # - A boolean value whether to include support costs in the cost budget. Defaults to true
+          include_tax # - A boolean value whether to include tax in the cost budget. Defaults to true
+          include_upfront # - A boolean value whether to include upfront costs in the cost budget. Defaults to true
+          use_amortized # - Specifies whether a budget uses the amortized rate. Defaults to false
+          use_blended # - A boolean value whether to use blended costs in the cost budget. Defaults to false
+        }
+
+        # Required
+        limit_amount # - The amount of cost or usage being measured for a budget
+      }
+    }
+    ```
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## EXAMPLES
 ```hcl
-module "terraform_module_template" {
-  source  = "../../"
+module "aws_budgets" {
+  source  = "github.com/getindata/terraform-aws-budget"
   context = module.this.context
 
-  example_var = "This is example value."
+  budgets = {
+    custom-notifications = {
+      budget_type       = "COST"
+      limit_amount      = 1000
+      time_period_start = "2017-01-01_12:00"
+      time_period_end   = "2017-02-01_12:00"
+      time_unit         = "MONTHLY"
+
+      cost_filters = [
+        {
+          name  = "AZ"
+          value = ["eu-central-1b"]
+        },
+      ]
+
+      cost_types = {
+        include_tax = false
+      }
+
+      notifications = {
+        test = {
+          comparison_operator        = "GREATER_THAN"
+          notification_type          = "ACTUAL"
+          subscriber_email_addresses = ["test@example.com"]
+          threshold                  = 80
+          threshold_type             = "PERCENTAGE"
+        },
+      }
+    },
+
+    extra-notifications = {
+      budget_type  = "COST"
+      limit_amount = 100
+      time_unit    = "DAILY"
+
+      extra_notifications = {
+        extra = {
+          comparison_operator        = "GREATER_THAN"
+          notification_type          = "ACTUAL"
+          subscriber_email_addresses = ["test@example.com"]
+          threshold                  = 50
+          threshold_type             = "PERCENTAGE"
+        },
+      }
+    },
+
+    default-notifications = {
+      budget_type       = "COST"
+      limit_amount      = 1000
+      time_period_start = "2017-01-01_12:00"
+      time_period_end   = "2017-02-01_12:00"
+      time_unit         = "MONTHLY"
+
+      cost_filters = [
+        {
+          name  = "AZ"
+          value = ["eu-central-1b"]
+        },
+      ]
+    },
+
+    minimal-example = {
+      limit_amount = 1000
+    }
+  }
+
+  default_notifications = {
+    default-forcast-100 = {
+      comparison_operator : "GREATER_THAN"
+      threshold : 100
+      threshold_type : "PERCENTAGE"
+      notification_type : "FORECASTED"
+      subscriber_email_addresses : []
+    },
+    default-actual-80 = {
+      comparison_operator : "GREATER_THAN"
+      threshold : 80
+      threshold_type : "PERCENTAGE"
+      notification_type : "ACTUAL"
+      subscriber_email_addresses : []
+    },
+    default-actual-100 = {
+      comparison_operator : "GREATER_THAN"
+      threshold : 100
+      threshold_type : "PERCENTAGE"
+      notification_type : "ACTUAL"
+      subscriber_email_addresses : []
+    }
+  }
+
+  default_email_addresses = ["aws@example.com"]
 }
 ```
 
@@ -58,12 +218,14 @@ module "terraform_module_template" {
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br>This is for some rare cases where resources want additional configuration of tags<br>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br>in the order they appear in the list. New attributes are appended to the<br>end of the list. The elements of the list are joined by the `delimiter`<br>and treated as a single ID element. | `list(string)` | `[]` | no |
+| <a name="input_budgets"></a> [budgets](#input\_budgets) | A map of 'aws-budget' configuration objects:<pre>{<br>      BUDGET-NAME = {<br>        # Optional<br>        budget_type # - Whether this budget tracks monetary cost or usage. Availiable options: 'COST', 'USAGE', 'SAVINGS_PLANS_UTILIZATION', 'RI_UTILIZATION'."<br>        time_period_start # - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: 2017-01-01_12:00<br>        time_period_end # - The end of the time period covered by the budget. There are no restrictions on the end date. Format: 2017-01-01_12:00<br>        name # - Budget name (if omitted, map key, BUDGET-NAME will be used)<br>        time_unit # -The length of time until a budget resets the actual and forecasted spend. Valid values: MONTHLY, QUARTERLY, ANNUALLY, and DAILY<br>        cost filters # - A list of CostFilter name/values pair to apply to budget<br>        [<br>          {<br>            name  string # - A list of CostFilter name/values pair to apply to budget<br>            value = list(string) # - Refer to AWS CostFilter documentation for further detail.<br>          }<br>        ]<br>        notifications # - A map of objects containing Budget Notifications <br>        {<br>          NOTIFICATION-NAME = {<br>            comparison_operator # - Comparison operator to use to evaluate the condition. Can be LESS_THAN, EQUAL_TO or GREATER_THAN.<br>            threshold # - Threshold when the notification should be sent.<br>            threshold_type # - What kind of threshold is defined. Can be PERCENTAGE OR ABSOLUTE_VALUE.<br>            notification_type # - What kind of budget value to notify on. Can be ACTUAL or FORECASTED.<br>            subscriber_email_addresses # - E-Mail addresses to notify.<br>          },<br>        }<br>        extra_notifications # - A map of objects containing Additional Budget Notifications (will be combined with var.default_notifications)<br>        {<br>          ADDITIONAL-NOTIFICATION-NAME = {<br>            comparison_operator # - Comparison operator to use to evaluate the condition. Can be LESS_THAN, EQUAL_TO or GREATER_THAN.<br>            threshold # - Threshold when the notification should be sent.<br>            threshold_type # - What kind of threshold is defined. Can be PERCENTAGE OR ABSOLUTE_VALUE.<br>            notification_type # - What kind of budget value to notify on. Can be ACTUAL or FORECASTED.<br>            subscriber_email_addresses # - E-Mail addresses to notify.<br>          },<br>        }<br>        cost_types # - A map containing CostTypes The types of cost included in a budget, such as tax and subscriptions.<br>        {<br>          include_credit # - A boolean value whether to include credits in the cost budget. Defaults to true<br>          include_discount # - Specifies whether a budget includes discounts. Defaults to true<br>          include_other_subscription # - A boolean value whether to include other subscription costs in the cost budget. Defaults to true<br>          include_recurring # - A boolean value whether to include recurring costs in the cost budget. Defaults to true<br>          include_refund # - A boolean value whether to include refunds in the cost budget. Defaults to true<br>          include_subscription # - A boolean value whether to include subscriptions in the cost budget. Defaults to true<br>          include_support # - A boolean value whether to include support costs in the cost budget. Defaults to true<br>          include_tax # - A boolean value whether to include tax in the cost budget. Defaults to true<br>          include_upfront # - A boolean value whether to include upfront costs in the cost budget. Defaults to true<br>          use_amortized # - Specifies whether a budget uses the amortized rate. Defaults to false<br>          use_blended # - A boolean value whether to use blended costs in the cost budget. Defaults to false<br>        }<br><br>        # Required<br>        limit_amount # - The amount of cost or usage being measured for a budget<br>      }<br>    }</pre>Example with fully configurable notifications (not using var.default\_notifications):<pre>terraform<br>    {<br>      test-budget = {<br>        budget_type       = "COST"<br>        limit_amount      = 1000<br>        time_period_start = "2017-01-01_12:00"<br>        time_period_end   = "2017-02-01_12:00"<br>        time_unit         = "MONTHLY"<br><br>        cost_filters = [<br>          {<br>            name = "AZ"<br>            value = "eu-central-1b"<br>          },<br>        ]<br><br>        notifications = {<br>          test = {<br>            comparison_operator        = "GREATER_THAN"<br>            notification_type          = "ACTUAL"<br>            subscriber_email_addresses = ["test@example.com"]<br>            threshold                  = 80<br>            threshold_type             = "PERCENTAGE"<br>          },<br>        }<br>      },<br>    }</pre>Example additional notifications:<pre>terraform<br>    {<br>      test-budget = {<br>        budget_type       = "COST"<br>        limit_amount      = 1000<br>        time_period_start = "2017-01-01_12:00"<br>        time_period_end   = "2017-02-01_12:00"<br>        time_unit         = "MONTHLY"<br><br>        cost_filters = [<br>          {<br>            name = "AZ"<br>            value = "eu-central-1b"<br>          },<br>        ]<br><br>        extra_notifications = {<br>          extra = {<br>            comparison_operator        = "GREATER_THAN"<br>            notification_type          = "ACTUAL"<br>            subscriber_email_addresses = ["test-extra@example.com"]<br>            threshold                  = 80<br>            threshold_type             = "PERCENTAGE"<br>          },<br>        }<br>      },<br>    }</pre>Example with only default notifications:<pre>terraform<br>    {<br>      test-budget = {<br>        budget_type       = "COST"<br>        limit_amount      = 1000<br>        time_period_start = "2017-01-01_12:00"<br>        time_period_end   = "2017-02-01_12:00"<br>        time_unit         = "MONTHLY"<br><br>        cost_filters = [<br>          {<br>            name = "AZ"<br>            value = "eu-central-1b"<br>          },<br>        ]<br>      },<br>    }</pre> | `any` | n/a | yes |
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br>See description of individual variables for details.<br>Leave string and numeric variables as `null` to use default value.<br>Individual variable settings (non-null) override settings in context object,<br>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br>  "additional_tag_map": {},<br>  "attributes": [],<br>  "delimiter": null,<br>  "descriptor_formats": {},<br>  "enabled": true,<br>  "environment": null,<br>  "id_length_limit": null,<br>  "label_key_case": null,<br>  "label_order": [],<br>  "label_value_case": null,<br>  "labels_as_tags": [<br>    "unset"<br>  ],<br>  "name": null,<br>  "namespace": null,<br>  "regex_replace_chars": null,<br>  "stage": null,<br>  "tags": {},<br>  "tenant": null<br>}</pre> | no |
+| <a name="input_default_email_addresses"></a> [default\_email\_addresses](#input\_default\_email\_addresses) | A list of default e-mail addresses that will receive all notifications | `list(string)` | `[]` | no |
+| <a name="input_default_notifications"></a> [default\_notifications](#input\_default\_notifications) | Configuration of default notifications<br>    map(object({<br>      comparison\_operator        = string<br>      threshold                  = number<br>      threshold\_type             = string<br>      notification\_type          = string<br>      subscriber\_email\_addresses = list(string)<br>    })) | <pre>map(object({<br>    comparison_operator        = string<br>    threshold                  = number<br>    threshold_type             = string<br>    notification_type          = string<br>    subscriber_email_addresses = list(string)<br>  }))</pre> | `{}` | no |
 | <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between ID elements.<br>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
 | <a name="input_descriptor_formats"></a> [descriptor\_formats](#input\_descriptor\_formats) | Describe additional descriptors to be output in the `descriptors` output map.<br>Map of maps. Keys are names of descriptors. Values are maps of the form<br>`{<br>   format = string<br>   labels = list(string)<br>}`<br>(Type is `any` so the map values can later be enhanced to provide additional options.)<br>`format` is a Terraform format string to be passed to the `format()` function.<br>`labels` is a list of labels, in order, to pass to `format()` function.<br>Label values will be normalized before being passed to `format()` so they will be<br>identical to how they appear in `id`.<br>Default is `{}` (`descriptors` output will be empty). | `any` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
-| <a name="input_example_var"></a> [example\_var](#input\_example\_var) | Example varible passed into the module | `string` | n/a | yes |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br>Set to `0` for unlimited length.<br>Set to `null` for keep the existing setting, which defaults to `0`.<br>Does not affect `id_full`. | `number` | `null` | no |
 | <a name="input_label_key_case"></a> [label\_key\_case](#input\_label\_key\_case) | Controls the letter case of the `tags` keys (label names) for tags generated by this module.<br>Does not affect keys of tags passed in via the `tags` input.<br>Possible values: `lower`, `title`, `upper`.<br>Default value: `title`. | `string` | `null` | no |
 | <a name="input_label_order"></a> [label\_order](#input\_label\_order) | The order in which the labels (ID elements) appear in the `id`.<br>Defaults to ["namespace", "environment", "stage", "name", "attributes"].<br>You can omit any of the 6 labels ("tenant" is the 6th), but at least one must be present. | `list(string)` | `null` | no |
@@ -80,32 +242,28 @@ module "terraform_module_template" {
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_aws_budget"></a> [aws\_budget](#module\_aws\_budget) | ./modules/budget | n/a |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_example_output"></a> [example\_output](#output\_example\_output) | Example output of the module |
+| <a name="output_budgets"></a> [budgets](#output\_budgets) | Map of budgets configuration |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_null"></a> [null](#provider\_null) | 3.1.1 |
+No providers.
 
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | 3.1.1 |
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [null_resource.output_input](https://registry.terraform.io/providers/hashicorp/null/3.1.1/docs/resources/resource) | resource |
+No resources.
 <!-- END_TF_DOCS -->
 
 ## CONTRIBUTING
@@ -121,8 +279,8 @@ Apache 2 Licensed. See [LICENSE](LICENSE) for full details.
 ## AUTHORS
 
 <!--- Replace repository name -->
-<a href="https://github.com/getindata/REPO_NAME/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=getindata/terraform-module-template" />
+<a href="https://github.com/getindata/terraform-aws-budget/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=getindata/terraform-aws-budget" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
