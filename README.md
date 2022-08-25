@@ -111,7 +111,7 @@ This module uses a specific `budgets` object for configurations - below paragrap
 ## EXAMPLES
 ```hcl
 module "aws_budgets" {
-  source  = "github.com/getindata/terraform-aws-budget"
+  source  = "github.com/getindata/terraform-aws-budget?ref=v1.0.0"
   context = module.this.context
 
   budgets = {

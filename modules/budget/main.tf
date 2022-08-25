@@ -5,7 +5,7 @@
  */
 
 resource "aws_budgets_budget" "this" {
-  name              = replace(lookup(module.this.descriptors, "budget", module.this.id), "/-+/", "")
+  name              = replace(lookup(module.this.descriptors, "budget", module.this.id), "/--+/", "-")
   budget_type       = var.budget_type
   limit_amount      = var.limit_amount
   limit_unit        = var.limit_unit
