@@ -1,5 +1,5 @@
 module "aws_budgets" {
-  source  = "github.com/getindata/terraform-aws-budget?ref=v1.0.0"
+  source  = "../../"
   context = module.this.context
 
   budgets = {
@@ -49,11 +49,12 @@ module "aws_budgets" {
     },
 
     default-notifications = {
-      budget_type       = "COST"
-      limit_amount      = 1000
-      time_period_start = "2017-01-01_12:00"
-      time_period_end   = "2017-02-01_12:00"
-      time_unit         = "MONTHLY"
+      budget_type           = "COST"
+      limit_amount          = 1000
+      time_period_start     = "2017-01-01_12:00"
+      time_period_end       = "2017-02-01_12:00"
+      time_unit             = "MONTHLY"
+      extra_email_addresses = ["product_owner@example.com"]
 
       cost_filters = [
         {

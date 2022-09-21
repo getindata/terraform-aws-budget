@@ -83,8 +83,8 @@ variable "notifications" {
   ))
 }
 
-variable "default_email_addresses" {
-  description = "A list of default e-mail addresses that will receive all notifications"
+variable "extra_email_addresses" {
+  description = "A list of additional e-mail addresses that will receive all notifications"
   type        = list(string)
   default     = []
 }
