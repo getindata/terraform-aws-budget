@@ -11,6 +11,7 @@ variable "budgets" {
         time_period_end # - The end of the time period covered by the budget. There are no restrictions on the end date. Format: 2017-01-01_12:00
         name # - Budget name (if omitted, map key, BUDGET-NAME will be used)
         time_unit # -The length of time until a budget resets the actual and forecasted spend. Valid values: MONTHLY, QUARTERLY, ANNUALLY, and DAILY
+        extra_email_addresses # - List containing email addresses that will receive all notifications
         cost filters # - A list of CostFilter name/values pair to apply to budget
         [
           {
@@ -62,11 +63,12 @@ variable "budgets" {
     ```terraform
     {
       test-budget = {
-        budget_type       = "COST"
-        limit_amount      = 1000
-        time_period_start = "2017-01-01_12:00"
-        time_period_end   = "2017-02-01_12:00"
-        time_unit         = "MONTHLY"
+        budget_type           = "COST"
+        limit_amount          = 1000
+        time_period_start     = "2017-01-01_12:00"
+        time_period_end       = "2017-02-01_12:00"
+        time_unit             = "MONTHLY"
+        extra_email_addresses = ["product_owner@example.com"]
 
         cost_filters = [
           {
@@ -91,11 +93,12 @@ variable "budgets" {
     ```terraform
     {
       test-budget = {
-        budget_type       = "COST"
-        limit_amount      = 1000
-        time_period_start = "2017-01-01_12:00"
-        time_period_end   = "2017-02-01_12:00"
-        time_unit         = "MONTHLY"
+        budget_type           = "COST"
+        limit_amount          = 1000
+        time_period_start     = "2017-01-01_12:00"
+        time_period_end       = "2017-02-01_12:00"
+        time_unit             = "MONTHLY"
+        extra_email_addresses = ["product_owner@example.com"]
 
         cost_filters = [
           {
@@ -120,11 +123,12 @@ variable "budgets" {
     ```terraform
     {
       test-budget = {
-        budget_type       = "COST"
-        limit_amount      = 1000
-        time_period_start = "2017-01-01_12:00"
-        time_period_end   = "2017-02-01_12:00"
-        time_unit         = "MONTHLY"
+        budget_type           = "COST"
+        limit_amount          = 1000
+        time_period_start     = "2017-01-01_12:00"
+        time_period_end       = "2017-02-01_12:00"
+        time_unit             = "MONTHLY"
+        extra_email_addresses = ["product_owner@example.com"]
 
         cost_filters = [
           {
