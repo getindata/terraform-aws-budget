@@ -33,11 +33,11 @@ module "aws_budgets" {
 
   default_notifications = {
     default-actual-100 = {
-      comparison_operator : "GREATER_THAN"
-      threshold : 100
-      threshold_type : "PERCENTAGE"
-      notification_type : "ACTUAL"
-      subscriber_email_addresses : []
+      comparison_operator = "GREATER_THAN"
+      threshold = 100
+      threshold_type = "PERCENTAGE"
+      notification_type = "ACTUAL"
+      subscriber_email_addresses = []
     }
   }
 
